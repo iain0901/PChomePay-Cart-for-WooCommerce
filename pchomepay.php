@@ -4,8 +4,8 @@
  *
  * Plugin Name: PChomePay Gateway for WooCommerce
  * Plugin URI: https://www.pchomepay.com.tw
- * Description: 讓 WooCommerce 可以使用 PChomePay支付連 進行結帳！水啦！！
- * Version: 1.6.3
+ * Description: 讓 WooCommerce 可以使用 PChomePay支付連 進行結帳！水啦！！支援 PI 錢包付款方式的標題和描述設定。
+ * Version: 1.6.4
  * Author: PChomePay支付連
  * Author URI: https://www.pchomepay.com.tw
  */
@@ -13,6 +13,9 @@
 defined('ABSPATH') || exit;
 
 add_action('plugins_loaded', 'pchomepay_gateway_init', 0);
+
+// 在插件初始化時修改 Pi 錢包付款方式的標題和描述
+add_action('plugins_loaded', 'pchomepay_pi_modify_title_description', 20);
 
 function pchomepay_gateway_init()
 {
@@ -35,6 +38,7 @@ function pchomepay_gateway_init()
     {
         $mylinks = array(
             '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=pchomepay') . '">' . __('設定') . '</a>',
+            '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=pchomepay_pi') . '">' . __('Pi 錢包設定') . '</a>',
         );
         return array_merge($links, $mylinks);
     }
@@ -48,6 +52,69 @@ function pchomepay_gateway_init()
     }
 
     add_filter('woocommerce_thankyou_order_received_text', 'customize_order_received_text', 10, 2);
+    
+    // 設定 Pi 錢包付款方式的標題和描述
+    function set_pi_wallet_title_description() {
+        // 獲取當前設定
+        $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+        
+        // 如果設定不存在，創建一個新的設定
+        if (empty($settings)) {
+            $settings = array(
+                'enabled' => 'yes',
+            );
+        }
+        
+        // 設定標題和描述（如果尚未設定）
+        if (!isset($settings['title']) || empty($settings['title'])) {
+            $settings['title'] = '拍錢包付款';
+        }
+        
+        if (!isset($settings['description']) || empty($settings['description'])) {
+            $settings['description'] = '使用拍錢包進行付款';
+        }
+        
+        // 保存設定
+        update_option('woocommerce_pchomepay_pi_settings', $settings);
+    }
+    
+    // 在插件初始化時設定 Pi 錢包付款方式的標題和描述
+    set_pi_wallet_title_description();
+}
+
+// 在插件初始化時修改 Pi 錢包付款方式的標題和描述
+function pchomepay_pi_modify_title_description() {
+    // 確保 WooCommerce 已經載入
+    if (!class_exists('WC_Payment_Gateway')) {
+        return;
+    }
+    
+    // 獲取 PI 錢包設定
+    $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+    $title = isset($settings['title']) ? $settings['title'] : '拍錢包付款';
+    $description = isset($settings['description']) ? $settings['description'] : '使用拍錢包進行付款';
+    
+    // 修改 Pi 錢包付款方式的標題和描述
+    add_filter('woocommerce_gateway_title', 'pchomepay_pi_modify_title', 10, 2);
+    add_filter('woocommerce_gateway_description', 'pchomepay_pi_modify_description', 10, 2);
+}
+
+function pchomepay_pi_modify_title($title, $id) {
+    if ($id === 'pchomepay_pi') {
+        // 獲取 PI 錢包設定
+        $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+        return isset($settings['title']) ? $settings['title'] : '拍錢包付款';
+    }
+    return $title;
+}
+
+function pchomepay_pi_modify_description($description, $id) {
+    if ($id === 'pchomepay_pi') {
+        // 獲取 PI 錢包設定
+        $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+        return isset($settings['description']) ? $settings['description'] : '使用拍錢包進行付款';
+    }
+    return $description;
 }
 
 add_action('init', 'pchomepay_plugin_updater_init');

@@ -1,0 +1,146 @@
+# PChomePay PI 錢包付款方式修改說明
+
+## 問題描述
+原始的 PChomePay 外掛中，PI 錢包付款方式的標題和描述是硬編碼的，無法在管理後台進行修改。
+
+## 修改內容
+
+### 必要修改
+
+1. **修改 PI 錢包 Gateway 類別的 init_form_fields 方法**
+   文件：includes/PChomePayGateway.php
+   行數：約 608-620
+   修改內容：添加標題和描述欄位到表單欄位中
+   ```php
+   public function init_form_fields()
+   {
+       $this->form_fields = array(
+           'enabled' => array(
+               'title' => __('Enable/Disable', 'woocommerce'),
+               'type' => 'checkbox',
+               'label' => __('Enable', 'woocommerce'),
+               'default' => 'no'
+           ),
+           'title' => array(
+               'title' => __('Title', 'woocommerce'),
+               'type' => 'text',
+               'description' => __('This controls the title which the user sees during checkout.', 'woocommerce'),
+               'default' => __('拍錢包付款', 'woocommerce'),
+               'desc_tip' => true,
+           ),
+           'description' => array(
+               'title' => __('Description', 'woocommerce'),
+               'type' => 'textarea',
+               'description' => __('This controls the description which the user sees during checkout.', 'woocommerce'),
+               'default' => __('使用拍錢包進行付款', 'woocommerce'),
+           )
+       );
+   }
+   ```
+
+2. **修改 PI 錢包 Gateway 類別的建構函數**
+   文件：includes/PChomePayGateway.php
+   行數：約 582-585
+   修改內容：從設定中獲取標題和描述，而不是使用硬編碼值
+   ```php
+   // 定義使用者設定的變數
+   $this->enabled = $this->get_option('enabled');
+   // 從設定中獲取標題和描述，而不是使用硬編碼值
+   $this->title = $this->get_option('title');
+   $this->description = $this->get_option('description');
+   ```
+
+3. **修改設定鏈接**
+   文件：pchomepay.php
+   行數：約 40
+   修改內容：更新 PI 錢包設定鏈接，指向 WooCommerce 標準設定頁面
+   ```php
+   '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=pchomepay_pi') . '">' . __('Pi 錢包設定') . '</a>',
+   ```
+
+4. **更新外掛版本號**
+   文件：pchomepay.php
+   行數：約 8
+   修改內容：將版本號從 1.6.3 更新為 1.6.4，並更新描述
+   ```php
+   * Description: 讓 WooCommerce 可以使用 PChomePay支付連 進行結帳！水啦！！支援 PI 錢包付款方式的標題和描述設定。
+   * Version: 1.6.4
+   ```
+
+### 可選修改
+
+1. **修改過濾器函數**
+   文件：pchomepay.php
+   行數：約 86-111
+   修改內容：修改 pchomepay_pi_modify_title_description、pchomepay_pi_modify_title 和 pchomepay_pi_modify_description 函數，使其從設定中獲取值
+   ```php
+   function pchomepay_pi_modify_title_description() {
+       // 確保 WooCommerce 已經載入
+       if (!class_exists('WC_Payment_Gateway')) {
+           return;
+       }
+       
+       // 獲取 PI 錢包設定
+       $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+       $title = isset($settings['title']) ? $settings['title'] : '拍錢包付款';
+       $description = isset($settings['description']) ? $settings['description'] : '使用拍錢包進行付款';
+       
+       // 修改 Pi 錢包付款方式的標題和描述
+       add_filter('woocommerce_gateway_title', 'pchomepay_pi_modify_title', 10, 2);
+       add_filter('woocommerce_gateway_description', 'pchomepay_pi_modify_description', 10, 2);
+   }
+
+   function pchomepay_pi_modify_title($title, $id) {
+       if ($id === 'pchomepay_pi') {
+           // 獲取 PI 錢包設定
+           $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+           return isset($settings['title']) ? $settings['title'] : '拍錢包付款';
+       }
+       return $title;
+   }
+
+   function pchomepay_pi_modify_description($description, $id) {
+       if ($id === 'pchomepay_pi') {
+           // 獲取 PI 錢包設定
+           $settings = get_option('woocommerce_pchomepay_pi_settings', array());
+           return isset($settings['description']) ? $settings['description'] : '使用拍錢包進行付款';
+       }
+       return $description;
+   }
+   ```
+
+2. **移除自定義設定頁面**
+   文件：pchomepay.php
+   行數：約 120-200
+   修改內容：移除自定義的 PI 錢包設定頁面代碼，包括 pchomepay_pi_settings_menu 和 pchomepay_pi_settings_page 函數
+
+3. **刪除不再需要的文件**
+   文件：set_pi_title.php
+   修改內容：刪除不再需要的 set_pi_title.php 文件
+
+## 使用說明
+
+完成上述修改後，您可以通過以下步驟設定 PI 錢包付款方式的標題和描述：
+
+1. 在 WordPress 管理後台，前往 **WooCommerce > 設定 > 付款**
+2. 點擊 **PI 錢包** 付款方式
+3. 在設定頁面中，您可以：
+   - 啟用/停用 PI 錢包付款方式
+   - 設定標題（顯示在結帳頁面上）
+   - 設定描述（顯示在結帳頁面上）
+4. 點擊 **保存設定** 按鈕
+
+請清除您的快取並重新載入頁面，以查看修改後的效果。
+
+## 版本更新說明
+
+- 版本 1.6.3 -> 1.6.4
+  - 添加了 PI 錢包付款方式的標題和描述設定功能
+  - 移除了自定義的 PI 錢包設定頁面，改用 WooCommerce 標準設定頁面
+  - 修改了 PI 錢包付款方式的過濾器函數，使其從設定中獲取值
+
+## 注意事項
+
+1. 如果您之前已經使用了自定義的 PI 錢包設定頁面，您可能需要重新設定 PI 錢包付款方式的標題和描述。
+2. 如果您使用了快取插件，請清除快取以確保修改生效。
+3. 如果您遇到任何問題，請檢查 WordPress 錯誤日誌或 WooCommerce 日誌。 
