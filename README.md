@@ -4,9 +4,7 @@
 
 ## 系統需求
 
-- PHP 5.6+
-- WordPress 4.3+
-- WooCommerce 3.0+
+此套件必須安裝於 Wordpress (6.4.2) 及 WooCommerce (8.4.0) 的版本，切勿升到較新的 Wordpress 及 WooCommerce 版本後才安裝套件。
 
 ## 安裝
 
