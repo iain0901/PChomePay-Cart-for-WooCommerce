@@ -1,6 +1,6 @@
 # PChomePay Gateway for WooCommerce
 
-讓 WooCommerce 可以使用 PChomePay支付連 進行結帳！水啦！！
+讓 WooCommerce 可以使用 PChomePay支付連 進行結帳！
 
 ## 系統需求
 
@@ -11,22 +11,6 @@
 1. 將外掛上傳至 `/wp-content/plugins/` 目錄，或直接透過 WordPress 外掛安裝介面進行安裝。
 2. 在 WordPress 後台啟用外掛。
 3. 前往 WooCommerce > 設定 > 付款，設定 PChomePay 付款閘道。
-
-## PI 錢包付款方式使用說明
-
-### 設定方法
-1. 在 WordPress 管理後台，前往 **WooCommerce > 設定 > 付款**
-2. 點擊 **PI 錢包** 付款方式
-3. 在設定頁面中：
-   - 啟用/停用 PI 錢包付款方式
-   - 設定標題（顯示在結帳頁面上）
-   - 設定描述（顯示在結帳頁面上）
-4. 點擊 **保存設定** 按鈕
-
-### 注意事項
-- PI 錢包付款方式與 PChomePay 支付連付款方式共用 APP ID 和 SECRET 設定
-- 請確保已在 PChomePay 支付連付款方式中設定了正確的 APP ID 和 SECRET
-- 如果您使用了快取插件，請清除快取以確保修改生效
 
 ### 設定頁面說明
 PI 錢包付款方式設定頁面包含以下欄位：
